@@ -1,6 +1,23 @@
+Most people use /goal wrong.
+
+They write: “make no mistakes.”
+
+Goal Prompt Architect turns /goal into an execution contract:
+
+- mission
+- risk envelope
+- grounded strategy search
+- evidence matrix
+- memory loop
+- stop rules
+
+Agent Skill for Codex, Claude Code, Hermes, and long-running AI agents.
+
+
+
 # Goal Prompt Architect
 
-**A ChatGPT Skill for creating rigorous `/goal` prompts for Codex, Claude Code, Hermes, and long-running autonomous AI agents.**
+**An agent Skill for creating `/goal` prompts for Codex, Claude Code, Hermes, and long-running autonomous AI agents.**
 
 Goal Prompt Architect turns vague task ideas into mission-grade execution contracts: measurable outcomes, grounded strategy search, risk boundaries, action classification, verification evidence, memory discipline, budget gates, and clean stop conditions.
 
@@ -133,36 +150,3 @@ OUTPUT:
 <summary, evidence, changed files, checks, risks, follow-ups>
 ```
 
-## Best repository description
-
-Use this GitHub description:
-
-> ChatGPT Skill for generating rigorous /goal prompts for Codex, Claude Code, Hermes, and long-running autonomous AI coding agents.
-
-## Recommended GitHub topics
-
-```text
-ai-agents
-agentic-ai
-autonomous-agents
-prompt-engineering
-chatgpt-skills
-codex
-claude-code
-hermes-agent
-software-agents
-coding-agents
-llm-agents
-ai-coding
-goal-prompts
-long-running-agents
-agent-workflows
-```
-
-## SEO keywords
-
-Goal Prompt Architect, /goal prompt, Codex goal prompt, Claude Code goal prompt, Hermes agent prompt, autonomous coding agent prompt, long-running AI agent, agentic workflow, prompt architecture, AI software engineering, verification-driven prompting, agent risk envelope, evidence matrix, agent stop rules, frontier AI agents.
-
-## License
-
-MIT License.
