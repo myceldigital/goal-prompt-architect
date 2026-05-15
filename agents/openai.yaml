@@ -1,0 +1,5 @@
+interface:
+  display_name: Goal Prompt Architect
+  short_description: Create rigorous /goal prompts for long-running autonomous agents.
+  icon: target
+  accent_color: "#4F46E5"
