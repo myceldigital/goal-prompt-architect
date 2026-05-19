@@ -1,6 +1,6 @@
 # Frontier /goal Prompt Template
 
-Use this for complex coding, repo, product, research, operations, or multi-hour tasks.
+Use this for complex coding, repo, product, research, operations, or multi-hour tasks that need strong strategy, evidence, and risk controls. For multi-day or maximum-persistence work, use `marathon-template.md` instead.
 
 ```text
 /goal
@@ -48,6 +48,8 @@ Select the strategy with the best tradeoff between:
 - architectural/workflow fit
 - scope control
 
+Revisit the selected strategy after repeated failure or newly discovered constraints instead of stopping immediately.
+
 RISK + ACTION POLICY:
 Classify meaningful actions:
 
@@ -86,6 +88,7 @@ For each criterion, maintain:
 - confidence
 - source
 - remaining gap
+- next action to close the gap
 
 EXECUTION LOOP:
 Repeat until a terminal state is reached:
@@ -116,7 +119,7 @@ Repeat until a terminal state is reached:
    Update memory layers and discard redundant context.
 
 8. CONTINUE / STOP
-   Continue only if the next step closes an evidence gap.
+   Continue when the next step closes an evidence gap and is permitted by the risk envelope.
 
 MEMORY:
 Maintain:
@@ -152,12 +155,12 @@ Track:
 - unresolved uncertainties
 - scope expansion pressure
 
-Pause if:
-- repeated failures exceed threshold
+Pause only when:
+- repeated diverse failures indicate the strategy is wrong and no clear alternate remains
 - blast radius exceeds expected scope
-- verification path becomes unclear
-- new requirements are discovered
-- confidence drops below acceptable threshold
+- verification path becomes unclear and cannot be narrowed
+- new requirements materially change the mission
+- confidence drops below acceptable threshold and safe inspection cannot restore it
 
 VERIFY:
 Run the narrowest relevant checks first, then broader validation as practical:
@@ -173,14 +176,21 @@ Stop when:
 - all success criteria are verified
 - the next action does not close an evidence gap
 - action exceeds authorization
-- ambiguity is high-impact
-- repeated failure indicates the selected strategy is wrong
+- ambiguity is high-impact and cannot be resolved by inspection
+- repeated diverse failure indicates the selected strategy is wrong and no safe alternate remains
 - budget gate triggers
 - scope expansion is required
+
+Do not stop merely because:
+- the first approach failed
+- tests/checks initially failed
+- documentation is incomplete
+- a reversible assumption is required
 
 TERMINAL STATE:
 Return exactly one:
 - DONE
+- PARTIAL DONE
 - BLOCKED
 - UNSAFE
 - BUDGET EXHAUSTED

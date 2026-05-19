@@ -1,6 +1,6 @@
 # Domain Adaptations
 
-Use these sections to adapt the frontier template.
+Use these sections to adapt the frontier or marathon templates.
 
 ## Software Repository / Coding Agent
 
@@ -43,6 +43,18 @@ Typical approval-required actions:
 - broad dependency upgrades
 - public exposure changes
 
+For marathon repo work, also add:
+
+```text
+MARATHON REPO PROTOCOL:
+- create `.goal/` persistent state unless forbidden by repo rules
+- checkpoint after each phase or every 60-90 minutes of meaningful work
+- if one implementation branch is blocked, park it in `.goal/handoff.md` and continue safe parallel work
+- require at least one maintainer-style diff review before DONE
+- after the first green narrow test, expand verification one level before declaring DONE
+- do not repeatedly run the same failing command without changing inputs, environment, or hypothesis
+```
+
 ## Regulated / Clinical / Legal / Financial Work
 
 Add stricter boundaries:
@@ -54,6 +66,15 @@ REGULATED BOUNDARIES:
 - do not create diagnosis, legal advice, financial advice, or risk classification beyond the approved scope
 - preserve auditability and human-review requirements
 - stop before compliance-significant changes
+```
+
+For marathon regulated work, keep the long-horizon protocol conservative:
+
+```text
+REGULATED MARATHON CONSTRAINT:
+- long runtime does not expand authority
+- continue only through safe analysis, local reversible edits, synthetic-data validation, and documentation
+- stop for compliance-significant interpretation, production data, real customer/patient/client impact, or external side effects
 ```
 
 ## Research / Analysis
@@ -69,6 +90,17 @@ RESEARCH PROTOCOL:
 - stop when evidence is sufficient for the requested decision, not when the topic is exhausted
 ```
 
+For marathon research, also add:
+
+```text
+MARATHON RESEARCH PROTOCOL:
+- maintain a source ledger with claim, source, confidence, and relevance
+- use phased research: scope, source discovery, synthesis, adversarial review, final recommendation
+- after first synthesis, run a contradiction search and update confidence
+- continue through weak evidence by seeking better sources, not by overstating claims
+- stop when evidence is decision-sufficient or further research has sharply diminishing returns
+```
+
 ## Data / Spreadsheet / Batch Processing
 
 Add:
@@ -82,6 +114,16 @@ DATA PROTOCOL:
 - never overwrite source files unless explicitly requested
 ```
 
+For marathon data work, also add:
+
+```text
+MARATHON DATA PROTOCOL:
+- create checkpoints for raw input profile, cleaning decisions, transformation logic, validation results, and final artifact
+- run validation after each transformation stage instead of only at the end
+- retain reproducible scripts or documented formulas for every non-trivial transformation
+- if full validation is blocked, produce partial validation evidence and a resumable diagnostic handoff
+```
+
 ## Operations / Business Workflow
 
 Add:
@@ -93,4 +135,14 @@ OPERATIONS PROTOCOL:
 - separate draft recommendations from actions that change live systems
 - record decisions, assumptions, and handoff notes
 - stop before sending, publishing, deleting, purchasing, or changing external systems unless authorized
+```
+
+For marathon operations work, also add:
+
+```text
+MARATHON OPERATIONS PROTOCOL:
+- split work into draft, review, validation, and ready-to-execute phases
+- continue autonomously on drafts, checklists, analysis, and internal handoff artifacts
+- park approval-required external actions while continuing safe preparation work
+- maintain an action register with owner, status, risk, dependency, and next step
 ```
