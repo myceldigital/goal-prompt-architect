@@ -37,6 +37,15 @@ class GoalLintTests(unittest.TestCase):
         self.assertTrue(report.passed, [f.code for f in report.findings])
         self.assertGreaterEqual(report.score / report.max_score, 0.82)
 
+    def test_runtime_hardened_goal_passes_runtime_checks(self):
+        report = lint_goal.score_goal(load("examples/good/runtime-hardened-goal.md"), "runtime-hardened-goal.md", mode="marathon")
+        self.assertTrue(report.passed, [f.code for f in report.findings])
+        category_names = {category.name for category in report.category_scores}
+        self.assertIn("compaction_resistance", category_names)
+        self.assertIn("deterministic_assertions", category_names)
+        self.assertIn("adversarial_hardening", category_names)
+        self.assertIn("telemetry_handoff", category_names)
+
     def test_json_shape_is_stable(self):
         report = lint_goal.score_goal(load("examples/good/frontier-repo-goal.md"), "frontier-repo-goal.md", mode="frontier")
         payload = lint_goal.asdict(report)

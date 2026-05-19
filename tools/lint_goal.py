@@ -4,7 +4,8 @@
 The linter is deliberately heuristic: it does not try to understand every task,
 but it catches the failure modes that make autonomous coding goals unsafe or
 unproductive: vague missions, missing verification, unbounded authority, weak
-stop rules, no evidence matrix, and marathon prompts without durable state.
+stop rules, no evidence matrix, marathon prompts without durable state, and
+runtime-hardened prompts without anchors, assertions, telemetry, or anti-sandbagging gates.
 """
 from __future__ import annotations
 
@@ -79,6 +80,42 @@ VERIFY_TERMS = (
     "oracle",
 )
 
+RUNTIME_ANCHOR_TERMS = (
+    "goal anchor",
+    "goal_anchor",
+    ".agent/goal_anchor.md",
+    "compacted state",
+    "cst_start",
+)
+
+RUNTIME_ASSERTION_TERMS = (
+    ".agent/goal.json",
+    "assertions",
+    "verification_command",
+    "primary_command",
+    ".agent/verify_step.py",
+    "deterministic assertion",
+)
+
+ADVERSARIAL_TERMS = (
+    "anti-sandbagging",
+    "do not delete",
+    "do not comment out",
+    "test assertions",
+    "skip markers",
+    "mocking",
+    "git_delta",
+)
+
+TELEMETRY_TERMS = (
+    ".agent/goal_telemetry.jsonl",
+    ".agent/interrupted_state.md",
+    "telemetry",
+    "handoff",
+    "intervention gates",
+    "state handoff",
+)
+
 TERMINAL_STATES = (
     "DONE",
     "PARTIAL DONE",
@@ -130,6 +167,11 @@ def has_any(text: str, terms: Iterable[str]) -> bool:
     return any(term.lower() in low for term in terms)
 
 
+def term_count(text: str, terms: Iterable[str]) -> int:
+    low = text.lower()
+    return sum(1 for term in terms if term.lower() in low)
+
+
 def count_success_criteria(text: str) -> int:
     match = re.search(r"(?ims)^\s*SUCCESS CRITERIA\s*:\s*(.*?)(?:^\s*[A-Z][A-Z /+\-]{2,}\s*:|\Z)", text)
     if not match:
@@ -148,11 +190,23 @@ def score_bool(name: str, value: bool, notes: list[str], weight: int = 5) -> Cat
     return CategoryScore(name=name, score=weight if value else 0, max_score=weight, notes=notes)
 
 
+def infer_mode(text: str, explicit: str | None) -> str:
+    if explicit:
+        return explicit
+    if has_any(text, ["LONG-HORIZON INTENT", "PERSISTENT STATE", "SOFT VS HARD BLOCKERS"]):
+        return "marathon"
+    return "frontier"
+
+
+def wants_runtime_hardening(text: str, mode: str) -> bool:
+    return mode == "marathon" or has_any(text, [".agent/", "GOAL ANCHOR", "COMPACTED STATE", "CST_START", "anti-sandbagging", "telemetry", "verify_step.py"])
+
+
 def score_goal(text: str, path: str = "<memory>", mode: str | None = None) -> LintReport:
     findings: list[Finding] = []
     categories: list[CategoryScore] = []
     low = normalize(text)
-    inferred_mode = mode or ("marathon" if has_any(text, ["LONG-HORIZON INTENT", "PERSISTENT STATE", "SOFT VS HARD BLOCKERS"]) else "frontier")
+    inferred_mode = infer_mode(text, mode)
 
     if "/goal" not in low:
         findings.append(Finding("MISSING_GOAL_PREFIX", "error", "Prompt does not contain /goal.", "Start the prompt with /goal."))
@@ -182,19 +236,19 @@ def score_goal(text: str, path: str = "<memory>", mode: str | None = None) -> Li
     section_score = max(0, 12 - len(missing_sections) * 2)
     categories.append(CategoryScore("contract_completeness", section_score, 12, ["missing=" + ",".join(missing_sections) if missing_sections else "all core sections present"]))
 
-    evidence_score = sum(1 for term in EVIDENCE_TERMS if term in low)
+    evidence_score = term_count(text, EVIDENCE_TERMS)
     evidence_ok = has_heading(text, CANONICAL_SECTIONS["evidence_matrix"]) and evidence_score >= 5
     if not evidence_ok:
         findings.append(Finding("WEAK_EVIDENCE_MATRIX", "error", "Evidence matrix is missing or underspecified.", "Include required proof, evidence found, pass/fail/unknown, confidence, source, remaining gap, and next action."))
     categories.append(CategoryScore("evidence_matrix", min(10, evidence_score + (3 if has_heading(text, CANONICAL_SECTIONS["evidence_matrix"]) else 0)), 10, [f"evidence_terms={evidence_score}"]))
 
-    risk_score = sum(1 for term in RISK_TERMS if term in low)
+    risk_score = term_count(text, RISK_TERMS)
     risk_ok = risk_score >= 4
     if not risk_ok:
         findings.append(Finding("WEAK_RISK_POLICY", "error", "Risk policy does not clearly bound authority.", "Separate allowed, rollback-required, approval-required, and forbidden actions."))
     categories.append(CategoryScore("risk_policy", min(10, risk_score * 2), 10, [f"risk_terms={risk_score}"]))
 
-    verify_score = sum(1 for term in VERIFY_TERMS if term in low)
+    verify_score = term_count(text, VERIFY_TERMS)
     verify_ok = has_heading(text, CANONICAL_SECTIONS["verify"]) and verify_score >= 3
     if not verify_ok:
         findings.append(Finding("WEAK_VERIFICATION_ORACLE", "error", "Verification is absent or too weak.", "Name the narrow checks, broader checks, and evidence mapping required for DONE."))
@@ -218,10 +272,35 @@ def score_goal(text: str, path: str = "<memory>", mode: str | None = None) -> Li
         marathon_score = max(0, 15 - len(missing_marathon) * 3)
         categories.append(CategoryScore("marathon_protocol", marathon_score, 15, ["missing=" + ",".join(missing_marathon) if missing_marathon else "all marathon sections present"]))
 
-        durable_state_ok = has_any(text, [".goal/", "state.md", "evidence.md", "handoff.md"])
+        durable_state_ok = has_any(text, [".goal/", ".agent/", "state.md", "evidence.md", "handoff.md"])
         if not durable_state_ok:
-            findings.append(Finding("WEAK_DURABLE_STATE", "error", "Marathon prompt does not specify durable state artifacts.", "Use .goal/state.md, .goal/evidence.md, .goal/failures.md, .goal/commands.md, and .goal/handoff.md or an equivalent final-output structure."))
+            findings.append(Finding("WEAK_DURABLE_STATE", "error", "Marathon prompt does not specify durable state artifacts.", "Use .goal/ or .agent/ state artifacts for state, evidence, failures, commands, and handoff."))
         categories.append(score_bool("durable_memory", durable_state_ok, ["durable state specified" if durable_state_ok else "durable state missing"], 7))
+
+    if wants_runtime_hardening(text, inferred_mode):
+        anchor_score = term_count(text, RUNTIME_ANCHOR_TERMS)
+        anchor_ok = anchor_score >= 2
+        if not anchor_ok:
+            findings.append(Finding("WEAK_GOAL_ANCHOR", "error", "Runtime-hardened prompt lacks a compact goal anchor.", "Add GOAL ANCHOR or .agent/goal_anchor.md with objective, target refs, constraints, verification, and stop gates."))
+        categories.append(CategoryScore("compaction_resistance", min(8, anchor_score * 3), 8, [f"anchor_terms={anchor_score}"]))
+
+        assertion_score = term_count(text, RUNTIME_ASSERTION_TERMS)
+        assertion_ok = assertion_score >= 2
+        if not assertion_ok:
+            findings.append(Finding("WEAK_RUNTIME_ASSERTIONS", "error", "Runtime-hardened prompt lacks deterministic assertion wiring.", "Reference .agent/goal.json assertions and/or .agent/verify_step.py verification commands."))
+        categories.append(CategoryScore("deterministic_assertions", min(8, assertion_score * 3), 8, [f"assertion_terms={assertion_score}"]))
+
+        adversarial_score = term_count(text, ADVERSARIAL_TERMS)
+        adversarial_ok = adversarial_score >= 3
+        if not adversarial_ok:
+            findings.append(Finding("WEAK_ADVERSARIAL_HARDENING", "error", "Prompt lacks anti-sandbagging gates.", "Forbid deleted/muted tests, skip markers, unjustified mocks, public API drift, and weak self-assessment."))
+        categories.append(CategoryScore("adversarial_hardening", min(10, adversarial_score * 2), 10, [f"adversarial_terms={adversarial_score}"]))
+
+        telemetry_score = term_count(text, TELEMETRY_TERMS)
+        telemetry_ok = telemetry_score >= 2
+        if not telemetry_ok:
+            findings.append(Finding("WEAK_TELEMETRY_HANDOFF", "error", "Prompt lacks runtime telemetry or interrupted-state handoff.", "Add .agent/goal_telemetry.jsonl and .agent/interrupted_state.md or equivalent handoff artifacts."))
+        categories.append(CategoryScore("telemetry_handoff", min(8, telemetry_score * 3), 8, [f"telemetry_terms={telemetry_score}"]))
 
     max_score = sum(c.max_score for c in categories)
     total_score = sum(c.score for c in categories)
