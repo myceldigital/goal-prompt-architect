@@ -1,0 +1,10 @@
+[project]
+name = "goal-prompt-architect-toolkit"
+version = "0.1.0"
+description = "Lint and structure /goal prompts as autonomous execution contracts."
+requires-python = ">=3.10"
+readme = "README.md"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
