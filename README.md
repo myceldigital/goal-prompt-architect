@@ -1,8 +1,8 @@
 Most people use /goal wrong.
 
-They write: “make no mistakes.”
+They write: `make no mistakes`.
 
-Goal Prompt Architect turns /goal into an execution contract:
+Goal Prompt Architect turns `/goal` into an execution contract:
 
 - mission
 - risk envelope
@@ -10,44 +10,51 @@ Goal Prompt Architect turns /goal into an execution contract:
 - evidence matrix
 - memory loop
 - stop rules
+- verification oracle
+- persistent state for marathon work
 
 Agent Skill for Codex, Claude Code, Hermes, and long-running AI agents.
 
-
-
 # Goal Prompt Architect
 
-**An agent Skill for creating `/goal` prompts for Codex, Claude Code, Hermes, and long-running autonomous AI agents.**
+**An agent Skill and toolkit for creating, linting, and improving `/goal` prompts for Codex, Claude Code, Hermes, and long-running autonomous AI agents.**
 
 Goal Prompt Architect turns vague task ideas into mission-grade execution contracts: measurable outcomes, grounded strategy search, risk boundaries, action classification, verification evidence, memory discipline, budget gates, and clean stop conditions.
-
-It is designed for people building with frontier coding agents and agentic workflows who want better long-horizon performance than prompts like:
-
-```text
-/goal make this perfect and make no mistakes
-```
-
-Instead, it helps produce prompts that tell agents exactly:
-
-- what mission to complete
-- what context to inspect first
-- what actions are allowed or forbidden
-- how to rank uncertainty before acting
-- how to verify success with evidence
-- how to avoid scope creep
-- when to stop, pause, or ask for human approval
-
-## Why this exists
-
-Long-running agents fail when goals are vague, scope is unbounded, verification is delayed, or the agent keeps acting after it should stop. This skill encodes a stricter architecture for `/goal` prompts:
-
-```text
-mission -> preflight -> grounded strategy search -> risk policy -> success criteria -> evidence matrix -> execution loop -> memory -> budget gates -> stop state -> output
-```
 
 The core principle:
 
 > Do not ask the agent to keep going. Ask it to keep reducing uncertainty with verified evidence inside a bounded risk envelope.
+
+## What this repository now contains
+
+```text
+goal-prompt-architect/
+├── SKILL.md                         # ChatGPT Skill entrypoint
+├── agents/
+│   └── openai.yaml                  # ChatGPT skill UI metadata
+├── references/
+│   ├── frontier-template.md         # advanced /goal architecture
+│   ├── compact-template.md          # lightweight /goal template
+│   ├── marathon-template.md         # long-horizon autonomous mission template
+│   ├── domain-adaptations.md        # repo, regulated, research, data, ops variants
+│   ├── modules/                     # reusable high-leverage prompt modules
+│   └── playbooks/                   # recurring mission playbooks
+├── tools/
+│   └── lint_goal.py                 # dependency-free /goal prompt linter
+├── schemas/
+│   ├── goal-contract.schema.json
+│   ├── evidence-matrix.schema.json
+│   └── risk-policy.schema.json
+├── examples/
+│   ├── good/                        # passing lint fixtures
+│   └── bad/                         # failing anti-pattern fixtures
+├── tests/
+│   └── test_lint_goal.py            # linter regression tests
+├── pyproject.toml
+├── CONTRIBUTING.md
+├── SECURITY.md
+└── LICENSE
+```
 
 ## What it creates
 
@@ -58,27 +65,65 @@ The skill can create:
 - Claude Code long-running task prompts
 - Hermes autonomous agent prompts
 - software refactor and migration prompts
+- marathon prompts for multi-hour or multi-day work
 - product, research, data, and operations goal prompts
 - prompt audits and rewrites
-- compact, standard, and frontier-grade variants
+- compact, frontier, and marathon variants
 
-## Repository contents
+## Toolkit quick start
 
-```text
-goal-prompt-architect/
-├── SKILL.md                         # ChatGPT Skill entrypoint
-├── agents/
-│   └── openai.yaml                  # ChatGPT skill UI metadata
-├── references/
-│   ├── frontier-template.md         # full advanced /goal architecture
-│   ├── compact-template.md          # lightweight /goal template
-│   └── domain-adaptations.md        # repo, regulated, research, data, ops variants
-├── examples/
-│   └── software-repo-goal.md        # example generated prompt
-├── CONTRIBUTING.md
-├── SECURITY.md
-└── LICENSE
+Run the linter against strong examples:
+
+```bash
+python tools/lint_goal.py examples/good/frontier-repo-goal.md
+python tools/lint_goal.py --mode marathon examples/good/marathon-repo-goal.md
 ```
+
+Run the regression tests:
+
+```bash
+python -m unittest discover -s tests -p 'test_*.py'
+```
+
+Emit machine-readable linter output:
+
+```bash
+python tools/lint_goal.py --json examples/good/frontier-repo-goal.md
+```
+
+The linter exits with status `0` when every prompt passes and `1` when any prompt fails.
+
+## Lint dimensions
+
+The linter scores prompts across:
+
+1. `/goal` prefix
+2. mission singularity
+3. measurable success criteria
+4. contract completeness
+5. evidence matrix
+6. risk policy
+7. verification oracle
+8. stop conditions
+9. anti-pattern detection
+10. marathon protocol and durable memory, when applicable
+
+## Prompt modes
+
+- **Compact**: low-risk, narrow, short-lived tasks where a concise execution contract is enough.
+- **Frontier**: complex or high-risk single-session tasks that need strategy search, evidence mapping, risk controls, and strong stopping conditions.
+- **Marathon**: long-horizon tasks intended to run for many cycles, hours, or days with persistent state, soft/hard blocker handling, failure recovery, phase gates, and quality ratchets.
+
+## Design standard
+
+A goal should be rejected if it relies on motivational language instead of operational evidence. Examples of anti-patterns include:
+
+- `make no mistakes`
+- `make it perfect`
+- `do whatever it takes`
+- `use every tool`
+- `keep going until everything is fixed`
+- `skip tests`
 
 ## Install as a ChatGPT Skill
 
@@ -88,7 +133,7 @@ goal-prompt-architect/
 4. Ask ChatGPT for a `/goal` prompt, for example:
 
 ```text
-Create a frontier-grade /goal prompt for migrating our Next.js app from Pages Router to App Router without breaking auth or billing.
+Create a marathon-grade /goal prompt for migrating our Next.js app from Pages Router to App Router without breaking auth or billing.
 ```
 
 ## Example use
@@ -111,42 +156,6 @@ The skill will produce a prompt with:
 - terminal states
 - final output contract
 
-## Frontier template shape
+## Future extensions
 
-```text
-/goal
-
-MISSION:
-<one measurable durable objective>
-
-PREFLIGHT:
-<objective, observed context, strategies, evidence plan, risks, stop conditions>
-
-GROUNDED STRATEGY SEARCH:
-<up to 3 grounded candidate strategies with verification and rollback>
-
-RISK + ACTION POLICY:
-<allowed, rollback-required, approval-required, forbidden actions>
-
-SUCCESS CRITERIA:
-<measurable criteria>
-
-EVIDENCE MATRIX:
-<proof for each criterion>
-
-EXECUTION LOOP:
-observe -> orient -> decide -> act -> verify -> reflect -> compact -> continue/stop
-
-MEMORY:
-<working memory, episodic ledger, semantic mission memory>
-
-BUDGET GATES:
-<time, failures, touched files, tool calls, unresolved uncertainty, scope pressure>
-
-STOP:
-<done, unsafe, blocked, budget exhausted, needs human decision>
-
-OUTPUT:
-<summary, evidence, changed files, checks, risks, follow-ups>
-```
-
+The current linter is intentionally heuristic and dependency-free. The next frontier is a compiler that converts structured goal contracts into compact, frontier, and marathon prompts, validates them against the JSON schemas, and benchmarks generated goals against known weak/strong fixtures.
